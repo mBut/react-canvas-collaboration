@@ -5,8 +5,33 @@ const logger = require('../build/lib/logger')
 const webpackConfig = require('../build/webpack.config')
 const project = require('../project.config')
 const compress = require('compression')
+const uuid = require('uuid/v4')
+const _ = require('lodash')
 
 const app = express()
+
+const expressWS = require('express-ws')(app)
+
+let channels = {};
+
+expressWS.getWss().on('connection', (ws) => {
+  const sessionKey = ws.upgradeReq.params.sessionKey;
+  channels[sessionKey] = channels[sessionKey] || { clients: {} }
+
+  const connectionId = uuid();
+  ws.id = connectionId;
+  channels[sessionKey].clients[connectionId] = ws;
+})
+
+app.ws('/canvas-sync/:sessionKey', (ws, req) => {
+  ws.on('message', msg => {
+    const sessionKey = req.params.sessionKey;
+    _.each(channels[sessionKey].clients, (socket, id) => {
+      if (id !== ws.id) socket.send(msg);
+    })
+  })
+})
+
 app.use(compress())
 
 // ------------------------------------

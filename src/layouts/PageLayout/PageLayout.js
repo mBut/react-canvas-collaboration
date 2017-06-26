@@ -4,10 +4,8 @@ import PropTypes from 'prop-types'
 import './PageLayout.scss'
 
 export const PageLayout = ({ children }) => (
-  <div className='container text-center'>
-    <div>
-      {children}
-    </div>
+  <div className='container'>
+    {children}
   </div>
 )
 PageLayout.propTypes = {
