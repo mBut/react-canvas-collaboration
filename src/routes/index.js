@@ -1,11 +1,13 @@
 import CoreLayout from '../layouts/PageLayout/PageLayout'
-import CanvasRoute from './Canvas'
+import Home from './Home'
+import Canvas from './Canvas'
 
 export const createRoutes = (store) => ({
   path: '/',
   component: CoreLayout,
+  indexRoute: Home,
   childRoutes: [
-    CanvasRoute(store)
+    Canvas(store)
   ]
 })
 
