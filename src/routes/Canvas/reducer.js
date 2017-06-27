@@ -5,6 +5,7 @@ import _ from 'lodash'
 export const WS_CONNECTED = 'WS_CONNECTED';
 export const REGISTER_LAYER = 'REGISTER_LAYER';
 export const SET_MODE = 'SET_MODE';
+export const SET_CURRENT_COLOR = 'SET_CURRENT_COLOR';
 export const DRAW_PATH = 'DRAW_PATH';
 export const MOVE_POINTER_AND_DRAW_PATH = 'MOVE_POINTER_AND_DRAW_PATH';
 
@@ -44,7 +45,6 @@ export function save() {
     const { layers } = getState().canvas
     const { sessionId } = getSessionId(getState());
     const layersData = _.map(layers, (layer) => layer.getContext().getImageData(0, 0, 500, 500));
-    console.log(layersData);
   }
 }
 
@@ -61,6 +61,7 @@ export function movePointer(pointerPosition) {
         canvasState.connection.send(
           JSON.stringify({
             type: DRAW_PATH,
+            color: canvasState.currentColor,
             path
           })
         )
@@ -69,9 +70,17 @@ export function movePointer(pointerPosition) {
       dispatch({
         type: MOVE_POINTER_AND_DRAW_PATH,
         pointerPosition,
+        color: canvasState.currentColor,
         path
       })
     }
+  }
+}
+
+export function setCurrentColor(color) {
+  return {
+    type: SET_CURRENT_COLOR,
+    color
   }
 }
 
@@ -104,16 +113,18 @@ const ACTION_HANDLERS = {
     })
   },
 
-  [DRAW_PATH]: (state, { path }) => {
+  [DRAW_PATH]: (state, { path, color }) => {
     return _.assign({}, state, {
-      drawPath: path
+      drawPath: path,
+      pathColor: color
     })
   },
 
-  [MOVE_POINTER_AND_DRAW_PATH]: (state, { pointerPosition, path }) => {
+  [MOVE_POINTER_AND_DRAW_PATH]: (state, { pointerPosition, path, color }) => {
     return _.assign({}, state, {
       lastPointerPosition: pointerPosition,
-      drawPath: path
+      drawPath: path,
+      pathColor: color
     })
   },
 
@@ -122,6 +133,10 @@ const ACTION_HANDLERS = {
       lastPointerPosition: pointerPosition,
       mode
     });
+  },
+
+  [SET_CURRENT_COLOR]: (state, { color }) => {
+    return _.assign({}, state, { currentColor: color })
   }
 }
 
@@ -129,7 +144,7 @@ const ACTION_HANDLERS = {
 
 const initialState = {
   layers: [],
-  mode: NORMAL_MODE
+  mode: NORMAL_MODE,
 }
 
 export default function canvasReducer (state = initialState, action) {

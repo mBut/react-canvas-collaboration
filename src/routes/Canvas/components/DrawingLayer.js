@@ -8,18 +8,17 @@ export default class FreeDrawing extends React.Component {
     this.state = {};
   }
 
-  componentDidMount() {
-    const { registerLayer } = this.props;
-    registerLayer(this.layer);
+  initializeOverlayCanvas() {
+    const { height, width } = this.props;
 
     const canvas = document.createElement('canvas');
-    canvas.width = 500;
-    canvas.height = 500;
+    canvas.width = width;
+    canvas.height = height;
 
     const context = canvas.getContext('2d');
-    //context.strokeStyle = "#df4b26";
-    //context.lineJoin = "round";
-    //context.lineWidth = 5;
+    context.lineJoin = "round";
+    context.lineWidth = 3;
+    context.globalCompositeOperation = 'source-over';
 
     this.setState({
       canvas: canvas,
@@ -27,12 +26,18 @@ export default class FreeDrawing extends React.Component {
     });
   }
 
+  componentDidMount() {
+    this.props.registerLayer(this.layer);
+    this.initializeOverlayCanvas();
+  }
+
   componentDidUpdate() {
     const { context } = this.state;
 
     if (this.props.drawPath) {
-      const { x0, y0, x1, y1 } = this.props.drawPath;
-      context.globalCompositeOperation = 'source-over';
+      const { pathColor, drawPath } = this.props;
+      const { x0, y0, x1, y1 } = drawPath;
+      context.strokeStyle = pathColor;
       context.beginPath();
 
       context.moveTo(x0 - this.image.x(), y0 - this.image.y());
@@ -45,22 +50,24 @@ export default class FreeDrawing extends React.Component {
   }
 
   render() {
+    const { height, width } = this.props;
+
     return (
       <Layer ref={ (c) => this.layer = c }>
         <Image ref={ (c) => this.image = c }
           image={ this.state.canvas }
-          x="0"
-          y="0"
-          stroke="green"
+          height={ height }
+          width={ width }
         />
       </Layer>
     );
   }
 }
 
-//FreeDrawing.propTypes = {
-  //currX: PropTypes.number.isRequired,
-  //currY: PropTypes.number.isRequired,
-  //prevY: PropTypes.number.isRequired,
-  //prevY: PropTypes.number.isRequired,
-//}
+FreeDrawing.propTypes = {
+  registerLayer: PropTypes.func.isRequired,
+  height: PropTypes.number.isRequired,
+  width: PropTypes.number.isRequired,
+  pathColor: PropTypes.string,
+  drawPath: PropTypes.object,
+}
